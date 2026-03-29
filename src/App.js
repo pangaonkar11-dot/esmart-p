@@ -1058,7 +1058,7 @@ export default function App() {
         child_name:ci.name||"", child_dob:ci.dob||"", child_age:ci.age||"",
         child_gender:ci.gender||"", school:ci.school||"", grade:"",
         // Parent info
-        parent_name:ci.informantName||"", relationship:ci.relation||"",
+        parent_name:ci.informantName||"", relationship_to_child:ci.relation||"",
         // Scores
         age_band:ageInfo.group||"", total_score:"", percentile:"",
         risk_level:RL.tag||"",
