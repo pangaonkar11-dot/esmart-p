@@ -1043,9 +1043,6 @@ export default function App() {
     setP({}); setBx({}); setSm({}); setSmEx(false); setTab("parent");
   }
 
-  // Guard — only render the form if screen === "form"
-  if (screen !== "form") return null;
-
   function sendSheets() {
     const url = APPS_SCRIPT_URL;
     if (!url || url.startsWith("PASTE_")) { setShSt("⚠️ Apps Script URL not configured."); return; }
@@ -1072,13 +1069,7 @@ export default function App() {
     }).then(()=>setShSt("✅ Sent to Google Sheets!")).catch(()=>setShSt("❌ Failed. Check URL."));
   }
 
-  const fld = (lbl,k,type="text",full=false) => (
-    <div style={{gridColumn:full?"1/-1":"auto"}}>
-      <label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{lbl}</label>
-      <input type={type} value={ci[k]} onChange={e=>updCi(k,e.target.value)}
-        style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/>
-    </div>
-  );
+  // fields rendered inline below
 
   const btn = (lbl,fn,col="#0d5c6e",disabled=false) => (
     <button onClick={fn} disabled={disabled} style={{padding:"11px 28px",borderRadius:9,background:disabled?"#e2e8f0":col,color:disabled?"#94a3b8":"#fff",border:"none",fontSize:14,fontWeight:700,cursor:disabled?"not-allowed":"pointer"}}>{lbl}</button>
@@ -1310,8 +1301,8 @@ export default function App() {
             <div style={{background:"#f8fafc",borderRadius:12,padding:18,marginBottom:14,border:"1px solid #e2e8f0"}}>
               <h3 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#0d5c6e"}}>👶 {t.childInfo}</h3>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                {fld(t.childName,"name","text",true)}
-                {fld(t.childAge,"age","number")}
+                {div style={{gridColumn:"1/-1"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.childName}</label><input type="text" value={ci['name']} onChange={e=>updCi('name',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div}
+                {div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.childAge}</label><input type="number" value={ci['age']} onChange={e=>updCi('age',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div}
                 <div>
                   <label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.dob}</label>
                   <input type="date" value={ci.dob} onChange={e=>updCi("dob",e.target.value)}
@@ -1324,11 +1315,11 @@ export default function App() {
                     {[t.genderM,t.genderF,t.genderO].map(g=><option key={g}>{g}</option>)}
                   </select>
                 </div>
-                {fld(t.fileNo,"fileNo")}
-                {fld(t.regNo,"regNo")}
-                {fld(t.school,"school")}
-                {fld(t.dateAssessment,"date","date")}
-                {fld(t.examiner,"examiner")}
+                {div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.fileNo}</label><input type="text" value={ci['fileNo']} onChange={e=>updCi('fileNo',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div}
+                {div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.regNo}</label><input type="text" value={ci['regNo']} onChange={e=>updCi('regNo',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div}
+                {div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.school}</label><input type="text" value={ci['school']} onChange={e=>updCi('school',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div}
+                {div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.dateAssessment}</label><input type="date" value={ci['date']} onChange={e=>updCi('date',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div}
+                {div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.examiner}</label><input type="text" value={ci['examiner']} onChange={e=>updCi('examiner',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div}
               </div>
             </div>
 
@@ -1346,7 +1337,7 @@ export default function App() {
             <div style={{background:"#f8fafc",borderRadius:12,padding:18,marginBottom:14,border:"1px solid #e2e8f0"}}>
               <h3 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#0d5c6e"}}>🧑‍🤝‍🧑 {t.informantDetails}</h3>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                {fld(t.informantName,"informantName")}
+                {div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.informantName}</label><input type="text" value={ci['informantName']} onChange={e=>updCi('informantName',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div}
                 <div>
                   <label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.relation}</label>
                   <select value={ci.relation} onChange={e=>updCi("relation",e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",background:"#fff"}}>
