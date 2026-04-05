@@ -1028,6 +1028,40 @@ export default function App() {
   const S   = computeScores(bx);
   const RL  = getRiskLevel(S, t);
   const SF  = getSuicideFlag(S);
+
+  // Auto-submit to databank when report is viewed (step >= reportStep)
+  const [autoSent, setAutoSent] = useState(false);
+  useEffect(() => {
+    if (step >= 7 && !autoSent && APPS_SCRIPT_URL && !APPS_SCRIPT_URL.startsWith("PASTE_")) {
+      setAutoSent(true);
+      const fileNo = (ci.fileNo || autoFileNo()).trim();
+      fetch(APPS_SCRIPT_URL, { method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          tool:"eSMART-P", timestamp:new Date().toISOString(), mode: role||"informant",
+          fileNo, uid:"", name:ci.examiner||"", dob:"", age:"", gender:"",
+          mobile:ci.mobile||"", education:"", occupation:ci.informantOccupation||"",
+          referral:"", assessor:ci.examiner||"", notes:"",
+          child_name:ci.name||"", child_dob:ci.dob||"", child_age:ci.age||"",
+          child_gender:ci.gender||"", school:ci.school||"", grade:ci.grade||"",
+          parent_name:ci.informantName||"", relationship_to_child:ci.relation||"",
+          informant_occupation:ci.informantOccupation||"",
+          age_band:ageInfo.group||"",
+          total_score:Object.values(S).reduce((a,v)=>a+(v.total||0),0)||"",
+          percentile:"", risk_level:RL.tag||"", risk_label:RL.label||"",
+          suicide_flag:getSuicideFlag(S)?"FLAGGED":"Clear",
+          idd_score:S.IDD?.total||"", idd_sev:S.IDD?.sev||"",
+          adhd_score:S.ADHD?.total||"", adhd_sev:S.ADHD?.sev||"",
+          asd_score:S.ASD?.total||"", asd_sev:S.ASD?.sev||"",
+          sld_score:S.SLD?.total||"", sld_sev:S.SLD?.sev||"",
+          mdd_score:S.MDD?.total||"", mdd_sev:S.MDD?.sev||"",
+          anx_score:S.ANX?.total||"", anx_sev:S.ANX?.sev||"",
+          odd_score:S.ODD?.total||"", odd_sev:S.ODD?.sev||"",
+          cd_score:S.CD?.total||"", cd_sev:S.CD?.sev||"",
+        })
+      }).catch(()=>{});
+    }
+  }, [step]);
+  const SF  = getSuicideFlag(S);
   const PR  = getPeriRisk(p);
   const FR  = getFutureRisks(S, RL, SF);
   const ANS = items.filter(i => bx[i.id] !== undefined).length;
@@ -1052,19 +1086,29 @@ export default function App() {
       body: JSON.stringify({
         tool:"eSMART-P", timestamp:new Date().toISOString(), mode: role||"informant",
         fileNo, uid:"", name:ci.examiner||"", dob:"", age:"", gender:"",
-        mobile:ci.mobile||"", education:"", occupation:"",
+        mobile:ci.mobile||"", education:"", occupation:ci.informantOccupation||"",
         referral:"", assessor:ci.examiner||"", notes:"",
         // Child info
         child_name:ci.name||"", child_dob:ci.dob||"", child_age:ci.age||"",
-        child_gender:ci.gender||"", school:ci.school||"", grade:"",
-        // Parent info
+        child_gender:ci.gender||"", school:ci.school||"", grade:ci.grade||"",
+        // Informant info
         parent_name:ci.informantName||"", relationship_to_child:ci.relation||"",
-        // Scores
-        age_band:ageInfo.group||"", total_score:"", percentile:"",
-        risk_level:RL.tag||"",
-        emotional_score:S.Em?.total||"", conduct_score:S.Co?.total||"",
-        hyperactivity_score:S.Hy?.total||"", peer_score:S.Pe?.total||"",
-        prosocial_score:S.Pr?.total||"",
+        informant_occupation:ci.informantOccupation||"",
+        // Age band & risk
+        age_band:ageInfo.group||"",
+        total_score:Object.values(S).reduce((a,v)=>a+(v.total||0),0)||"",
+        percentile:"",
+        risk_level:RL.tag||"", risk_label:RL.label||"",
+        suicide_flag:getSuicideFlag(S)?"FLAGGED":"Clear",
+        // Domain scores — DSM-5 aligned
+        idd_score:S.IDD?.total||"", idd_sev:S.IDD?.sev||"",
+        adhd_score:S.ADHD?.total||"", adhd_sev:S.ADHD?.sev||"",
+        asd_score:S.ASD?.total||"", asd_sev:S.ASD?.sev||"",
+        sld_score:S.SLD?.total||"", sld_sev:S.SLD?.sev||"",
+        mdd_score:S.MDD?.total||"", mdd_sev:S.MDD?.sev||"",
+        anx_score:S.ANX?.total||"", anx_sev:S.ANX?.sev||"",
+        odd_score:S.ODD?.total||"", odd_sev:S.ODD?.sev||"",
+        cd_score:S.CD?.total||"", cd_sev:S.CD?.sev||"",
       })
     }).then(()=>setShSt("✅ Sent to Google Sheets!")).catch(()=>setShSt("❌ Failed. Check URL."));
   }
