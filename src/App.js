@@ -1061,7 +1061,6 @@ export default function App() {
       }).catch(()=>{});
     }
   }, [step]);
-  const SF  = getSuicideFlag(S);
   const PR  = getPeriRisk(p);
   const FR  = getFutureRisks(S, RL, SF);
   const ANS = items.filter(i => bx[i.id] !== undefined).length;
