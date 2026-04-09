@@ -1667,6 +1667,16 @@ export default function App() {
                 <div style={{display:"flex",gap:8}}>
                   <input type="text" placeholder={t.sheetsPlaceholder} value={shUrl} onChange={e=>setShUrl(e.target.value)} style={{flex:1,padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:12,color:"#1e293b",outline:"none"}}/>
                   <button onClick={sendSheets} style={{padding:"8px 14px",borderRadius:8,background:"#0d9488",color:"#fff",border:"none",fontSize:13,fontWeight:700,cursor:"pointer"}}>{t.send}</button>
+                  {ci.fileNo && (
+                    <a href={`https://esmart-report.vercel.app?reg=${ci.fileNo}&mode=family&lang=${lang||"en"}`}
+                      target="_blank" rel="noopener noreferrer"
+                      style={{padding:"8px 14px",borderRadius:8,
+                        background:"linear-gradient(135deg,#0d9488,#10b981)",
+                        color:"#fff",border:"none",fontSize:13,fontWeight:700,
+                        cursor:"pointer",textDecoration:"none",display:"inline-block"}}>
+                      📋 {t.familyReport||"Family Report"} →
+                    </a>
+                  )}
                 </div>
                 {shSt&&<p style={{margin:"5px 0 0",fontSize:12,color:shSt.includes("✅")?"#16a34a":"#dc2626"}}>{shSt}</p>}
               </div>
