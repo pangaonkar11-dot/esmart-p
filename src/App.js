@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 
 // ── GOOGLE SHEETS DATA PIPELINE ───────────────────────────────────────────────
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFmt0azInyYV-4QzDl58q6DaYX9Wj3BKKbtmHI5G2xJjm69iYQkEndwN1mKI7vI64A8A/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYw3DNfteGUApE97zpPScPgVCrHjNXTU-kuwabwQNviLmsaW4gSEd6hqY1FoTJsxu4HQ/exec";
 const getURLParam = (key) => { try { return new URLSearchParams(window.location.search).get(key)||""; } catch { return ""; } };
 const autoFileNo  = () => { const yy=String(new Date().getFullYear()).slice(-2); return `CIBS-${yy}-${String(Math.floor(Math.random()*9000)+1000)}`; };
 
