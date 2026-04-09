@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 
 // ── GOOGLE SHEETS DATA PIPELINE ───────────────────────────────────────────────
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYw3DNfteGUApE97zpPScPgVCrHjNXTU-kuwabwQNviLmsaW4gSEd6hqY1FoTJsxu4HQ/exec";
@@ -995,7 +995,21 @@ function shareVia(method, childName, lang) {
   }
 }
 
-export default function App() {
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  componentDidCatch(error) { this.setState({ error: error.toString() }); }
+  render() {
+    if (this.state.error) return (
+      <div style={{padding:20,background:"#fef2f2",minHeight:"100vh",fontFamily:"monospace"}}>
+        <h2 style={{color:"#dc2626"}}>Error — please send this to Dev:</h2>
+        <pre style={{whiteSpace:"pre-wrap",fontSize:12,color:"#991b1b"}}>{this.state.error}</pre>
+      </div>
+    );
+    return this.props.children;
+  }
+}
+
+function AppInner() {
   const [lang,   setLang]   = useState(null);
   const [screen, setScreen] = useState("lang"); // "lang" | "role" | "letter" | "disclaimer" | "form"
   const [role,   setRole]   = useState(null);   // "informant" | "clinician"
@@ -1705,4 +1719,8 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+export default function App() {
+  return <ErrorBoundary><AppInner/></ErrorBoundary>;
 }
