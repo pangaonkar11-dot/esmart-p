@@ -1032,7 +1032,8 @@ export default function App() {
   // Auto-submit to databank when report is viewed (step >= reportStep)
   const [autoSent, setAutoSent] = useState(false);
   useEffect(() => {
-    if (step >= 7 && !autoSent && APPS_SCRIPT_URL && !APPS_SCRIPT_URL.startsWith("PASTE_")) {
+    if (step >= 7 && !autoSent && APPS_SCRIPT_URL && !APPS_SCRIPT_URL.startsWith("PASTE_")
+        && S && RL && typeof getSuicideFlag === "function") {
       setAutoSent(true);
       const fileNo = (ci.fileNo || autoFileNo()).trim();
       fetch(APPS_SCRIPT_URL, { method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"},
@@ -1063,8 +1064,8 @@ export default function App() {
   }, [step]);
   const PR  = getPeriRisk(p);
   const FR  = getFutureRisks(S, RL, SF);
-  const ANS = items.filter(i => bx[i.id] !== undefined).length;
-  const AFF = Object.entries(S).filter(([,x]) => x.sev !== "Normal");
+  const ANS = Array.isArray(items) ? items.filter(i => bx[i.id] !== undefined).length : 0;
+  const AFF = S ? Object.entries(S).filter(([,x]) => x.sev !== "Normal") : [];
   const SPO = Object.values(sm).some(v => v === true);
 
   const sevC = {Normal:"#16a34a",Mild:"#65a30d",Moderate:"#d97706",Severe:"#dc2626"};
