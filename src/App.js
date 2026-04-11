@@ -2,6 +2,16 @@ import React, { useState, useMemo, useEffect, useRef, useCallback } from "react"
 
 // ── GOOGLE SHEETS DATA PIPELINE ───────────────────────────────────────────────
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYw3DNfteGUApE97zpPScPgVCrHjNXTU-kuwabwQNviLmsaW4gSEd6hqY1FoTJsxu4HQ/exec";
+
+// ── Stable Auto-ID ────────────────────────────────────────────────────────
+function generateAutoID(surname, dob, mobile1, mobile2) {
+  const sur  = (surname||"").toUpperCase().replace(/[^A-Z]/g,"").slice(0,3)||"XXX";
+  const dobC = (dob||"").replace(/[^0-9]/g,"");
+  const ddmm = dobC.length>=4 ? dobC.slice(0,4) : "0000";
+  const mob  = ((mobile1||mobile2||"").replace(/[^0-9]/g,"").slice(-4))||"0000";
+  const yr   = String(new Date().getFullYear()).slice(-2);
+  return `CIBS-${yr}-${sur}-${ddmm}-${mob}`;
+}
 const getURLParam = (key) => { try { return new URLSearchParams(window.location.search).get(key)||""; } catch { return ""; } };
 const autoFileNo  = () => { const yy=String(new Date().getFullYear()).slice(-2); return `CIBS-${yy}-${String(Math.floor(Math.random()*9000)+1000)}`; };
 
@@ -1052,7 +1062,20 @@ function AppInner() {
       const fileNo = (ci.fileNo || autoFileNo()).trim();
       fetch(APPS_SCRIPT_URL, { method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
-          tool:"eSMART-P", timestamp:new Date().toISOString(), mode: role||"informant",
+          tool:"eSMART-P",
+          autoID: generateAutoID(ci.surname||(ci.name||"").split(" ").slice(-1)[0]||"", ci.dob, ci.mobile1||ci.mobile||"", ci.mobile2||""),
+          cibs_reg: ci.cibsReg||ci.fileNo||"",
+          c_file_no: (ci.cFileNo||ci.fileNo||"").trim(),
+          child_firstname: ci.firstName||(ci.name||"").split(" ")[0]||"",
+          child_surname: ci.surname||(ci.name||"").split(" ").slice(-1)[0]||"",
+          father_name: ci.fatherName||"",
+          mother_name: ci.motherName||"",
+          mobile1: ci.mobile1||ci.mobile||"",
+          mobile2: ci.mobile2||"",
+          email1: ci.email1||"",
+          email2: ci.email2||"",
+          city: ci.city||"",
+          timestamp:new Date().toISOString(), mode: role||"informant",
           fileNo, uid:"", name:ci.examiner||"", dob:"", age:"", gender:"",
           mobile:ci.mobile||"", education:"", occupation:ci.informantOccupation||"",
           referral:"", assessor:ci.examiner||"", notes:"",
@@ -1098,7 +1121,20 @@ function AppInner() {
     setShSt("⏳ Sending...");
     fetch(url, { method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({
-        tool:"eSMART-P", timestamp:new Date().toISOString(), mode: role||"informant",
+        tool:"eSMART-P",
+          autoID: generateAutoID(ci.surname||(ci.name||"").split(" ").slice(-1)[0]||"", ci.dob, ci.mobile1||ci.mobile||"", ci.mobile2||""),
+          cibs_reg: ci.cibsReg||ci.fileNo||"",
+          c_file_no: (ci.cFileNo||ci.fileNo||"").trim(),
+          child_firstname: ci.firstName||(ci.name||"").split(" ")[0]||"",
+          child_surname: ci.surname||(ci.name||"").split(" ").slice(-1)[0]||"",
+          father_name: ci.fatherName||"",
+          mother_name: ci.motherName||"",
+          mobile1: ci.mobile1||ci.mobile||"",
+          mobile2: ci.mobile2||"",
+          email1: ci.email1||"",
+          email2: ci.email2||"",
+          city: ci.city||"",
+          timestamp:new Date().toISOString(), mode: role||"informant",
         fileNo, uid:"", name:ci.examiner||"", dob:"", age:"", gender:"",
         mobile:ci.mobile||"", education:"", occupation:ci.informantOccupation||"",
         referral:"", assessor:ci.examiner||"", notes:"",
