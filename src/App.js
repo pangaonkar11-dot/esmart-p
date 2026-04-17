@@ -1025,7 +1025,23 @@ function AppInner() {
   const [role,   setRole]   = useState(null);   // "informant" | "clinician"
   const [agreed, setAgreed] = useState(false);
   const [step,   setStep]   = useState(1);
-  const [ci,    setCi]    = useState({ name:"",age:"",gender:"",fileNo:getURLParam("reg")||"",regNo:"",school:"",examiner:getURLParam("assessor")||"",date:new Date().toISOString().slice(0,10),dob:"",informantName:"",relation:"",mobile:"" });
+  const [ci, setCi] = useState({
+    // New consistent fields matching C and V
+    cibsReg:"", cFileNo:getURLParam("reg")||"",
+    firstName:"", surname:"",
+    dob:"", age:"", gender:"",
+    fatherName:"", motherName:"",
+    mobile1:"", mobile2:"",
+    email1:"", email2:"",
+    school:"", grade:"", city:"",
+    informantName:"", relation:"",
+    informantOccupation:"",
+    examiner:getURLParam("assessor")||"",
+    date:new Date().toISOString().slice(0,10),
+    // Legacy fields for compatibility
+    name:"", fileNo:getURLParam("reg")||"",
+    regNo:"", autoID:"",
+  });
   const [p,     setP]     = useState({});
   const [bx,    setBx]    = useState({});
   const [sm,    setSm]    = useState({});
@@ -1059,12 +1075,24 @@ function AppInner() {
     if (step >= 7 && !autoSent && APPS_SCRIPT_URL && !APPS_SCRIPT_URL.startsWith("PASTE_")
         && S && RL && typeof getSuicideFlag === "function") {
       setAutoSent(true);
-      const fileNo = (ci.fileNo || autoFileNo()).trim();
+      const fileNo = (ci.cFileNo||ci.fileNo || autoFileNo()).trim();
+      const autoID = generateAutoID(ci.surname||"", ci.dob, ci.mobile1||"", ci.mobile2||"");
       fetch(APPS_SCRIPT_URL, { method:"POST", mode:"no-cors", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
-          tool:"eSMART-P",
-          autoID: generateAutoID(ci.surname||(ci.name||"").split(" ").slice(-1)[0]||"", ci.dob, ci.mobile1||ci.mobile||"", ci.mobile2||""),
-          cibs_reg: ci.cibsReg||ci.fileNo||"",
+          tool:"eSMART-P", autoID,
+          cibs_reg: ci.cibsReg||ci.regNo||"",
+          c_file_no: fileNo,
+          child_firstname: ci.firstName||(ci.name||"").split(" ")[0]||"",
+          child_surname: ci.surname||(ci.name||"").split(" ").slice(-1)[0]||"",
+          father_name: ci.fatherName||"",
+          mother_name: ci.motherName||"",
+          mobile1: ci.mobile1||"",
+          mobile2: ci.mobile2||"",
+          email1: ci.email1||"",
+          city: ci.city||"",
+          grade: ci.grade||"",
+          autoID: generateAutoID(ci.surname||"", ci.dob, ci.mobile1||"", ci.mobile2||""),
+          cibs_reg: ci.cibsReg||ci.regNo||ci.fileNo||"",
           c_file_no: (ci.cFileNo||ci.fileNo||"").trim(),
           child_firstname: ci.firstName||(ci.name||"").split(" ")[0]||"",
           child_surname: ci.surname||(ci.name||"").split(" ").slice(-1)[0]||"",
@@ -1075,6 +1103,7 @@ function AppInner() {
           email1: ci.email1||"",
           email2: ci.email2||"",
           city: ci.city||"",
+          grade: ci.grade||"",
           timestamp:new Date().toISOString(), mode: role||"informant",
           fileNo, uid:"", name:ci.examiner||"", dob:"", age:"", gender:"",
           mobile:ci.mobile||"", education:"", occupation:ci.informantOccupation||"",
@@ -1393,27 +1422,72 @@ function AppInner() {
           {/* ══ STEP 1 — CHILD INFO ══ */}
           {step===1 && <div>
             <div style={{background:"#f8fafc",borderRadius:12,padding:18,marginBottom:14,border:"1px solid #e2e8f0"}}>
-              <h3 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#0d5c6e"}}>👶 {t.childInfo}</h3>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                {<div style={{gridColumn:"1/-1"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.childName}</label><input type="text" value={ci['name']} onChange={e=>updCi('name',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div>}
-                {<div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.childAge}</label><input type="number" value={ci['age']} onChange={e=>updCi('age',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div>}
-                <div>
-                  <label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.dob}</label>
-                  <input type="date" value={ci.dob} onChange={e=>updCi("dob",e.target.value)}
-                    style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/>
+              <h3 style={{margin:"0 0 14px",fontSize:15,fontWeight:700,color:"#0d5c6e"}}>👶 Child Registration</h3>
+
+              {/* Auto-ID preview */}
+              {(ci.surname&&ci.dob&&(ci.mobile1||ci.mobile2))&&(
+                <div style={{background:"linear-gradient(135deg,#0d3b47,#0d5c6e)",borderRadius:10,
+                  padding:"10px 14px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div>
+                    <div style={{fontSize:8,color:"rgba(255,255,255,0.5)",textTransform:"uppercase",letterSpacing:"0.1em"}}>Auto-ID</div>
+                    <div style={{fontSize:14,fontWeight:800,color:"white",fontFamily:"monospace"}}>
+                      {generateAutoID(ci.surname,ci.dob,ci.mobile1,ci.mobile2)}
+                    </div>
+                  </div>
+                  <div style={{fontSize:9,color:"rgba(255,255,255,0.5)"}}>Links C+P+V</div>
                 </div>
+              )}
+
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>CIBS Registration No.</label>
+                  <input type="text" value={ci.cibsReg||""} onChange={e=>updCi('cibsReg',e.target.value)} placeholder="CIBS-26-0042"
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>C-File Number</label>
+                  <input type="text" value={ci.cFileNo||""} onChange={e=>{updCi('cFileNo',e.target.value);updCi('fileNo',e.target.value);}}  placeholder="C-0042"
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>Child First Name ★</label>
+                  <input type="text" value={ci.firstName||""} onChange={e=>{updCi('firstName',e.target.value);updCi('name',(e.target.value+' '+(ci.surname||'')).trim());}}
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>Child Surname ★</label>
+                  <input type="text" value={ci.surname||""} onChange={e=>{updCi('surname',e.target.value);updCi('name',((ci.firstName||'')+' '+e.target.value).trim());}}
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>Date of Birth ★</label>
+                  <input type="date" value={ci.dob||""} onChange={e=>{updCi('dob',e.target.value);const ms=Date.now()-new Date(e.target.value).getTime();updCi('age',String(Math.floor(ms/(1000*60*60*24*365.25))));}}
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
                 <div>
-                  <label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.childGender}</label>
-                  <select value={ci.gender} onChange={e=>updCi("gender",e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",background:"#fff"}}>
-                    <option value="">{t.selectDots}</option>
-                    {[t.genderM,t.genderF,t.genderO].map(g=><option key={g}>{g}</option>)}
+                  <label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>Gender ★</label>
+                  <select value={ci.gender||""} onChange={e=>updCi("gender",e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,background:"#fff"}}>
+                    <option value="">Select...</option>
+                    <option value="M">Male</option><option value="F">Female</option><option value="O">Other</option>
                   </select>
                 </div>
-                {<div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.fileNo}</label><input type="text" value={ci['fileNo']} onChange={e=>updCi('fileNo',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div>}
-                {<div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.regNo}</label><input type="text" value={ci['regNo']} onChange={e=>updCi('regNo',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div>}
-                {<div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.school}</label><input type="text" value={ci['school']} onChange={e=>updCi('school',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div>}
-                {<div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.dateAssessment}</label><input type="date" value={ci['date']} onChange={e=>updCi('date',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div>}
-                {<div style={{gridColumn:"auto"}}><label style={{display:"block",fontSize:12,fontWeight:600,color:"#475569",marginBottom:4}}>{t.examiner}</label><input type="text" value={ci['examiner']} onChange={e=>updCi('examiner',e.target.value)} style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:14,color:"#1e293b",outline:"none",boxSizing:"border-box",background:"#fff"}}/></div>}
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>Father's Full Name</label>
+                  <input type="text" value={ci.fatherName||""} onChange={e=>updCi('fatherName',e.target.value)}
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>Mother's Full Name</label>
+                  <input type="text" value={ci.motherName||""} onChange={e=>updCi('motherName',e.target.value)}
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>Mobile 1 (Primary) ★</label>
+                  <input type="tel" value={ci.mobile1||""} onChange={e=>updCi('mobile1',e.target.value)} placeholder="10-digit"
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>Mobile 2</label>
+                  <input type="tel" value={ci.mobile2||""} onChange={e=>updCi('mobile2',e.target.value)}
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>Email 1</label>
+                  <input type="email" value={ci.email1||""} onChange={e=>updCi('email1',e.target.value)}
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>Email 2</label>
+                  <input type="email" value={ci.email2||""} onChange={e=>updCi('email2',e.target.value)}
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div style={{gridColumn:"1/-1"}}><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>School Name</label>
+                  <input type="text" value={ci.school||""} onChange={e=>updCi('school',e.target.value)}
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>Class / Grade</label>
+                  <input type="text" value={ci.grade||""} onChange={e=>updCi('grade',e.target.value)}
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+                <div><label style={{display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:4}}>City</label>
+                  <input type="text" value={ci.city||""} onChange={e=>updCi('city',e.target.value)} placeholder="Nagpur"
+                  style={{width:"100%",padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
               </div>
             </div>
 
@@ -1442,7 +1516,11 @@ function AppInner() {
               </div>
             </div>
             <div style={{background:"#eff6ff",border:"1px solid #bfdbfe",borderRadius:10,padding:12,marginBottom:14,fontSize:13,color:"#1e40af"}}>📋 {t.instChild}</div>
-            <div style={{display:"flex",justifyContent:"flex-end"}}>{btn(t.nextPerinatal,()=>setStep(2),"#0d5c6e",!ci.name||!ci.age||!ci.gender)}</div>
+            <div style={{display:"flex",justifyContent:"flex-end"}}>{btn(t.nextPerinatal,()=>{
+              updCi('name',`${ci.firstName||""} ${ci.surname||""}`.trim()||ci.name);
+              updCi('fileNo',ci.cFileNo||ci.fileNo||"");
+              setStep(2);
+            },"#0d5c6e",!(ci.firstName||ci.name)||!ci.dob||!ci.gender)}</div>
           </div>}
 
           {/* ══ STEP 2 — PERINATAL ══ */}
@@ -1717,16 +1795,29 @@ function AppInner() {
                 <div style={{display:"flex",gap:8}}>
                   <input type="text" placeholder={t.sheetsPlaceholder} value={shUrl} onChange={e=>setShUrl(e.target.value)} style={{flex:1,padding:"8px 12px",border:"1.5px solid #e2e8f0",borderRadius:8,fontSize:12,color:"#1e293b",outline:"none"}}/>
                   <button onClick={sendSheets} style={{padding:"8px 14px",borderRadius:8,background:"#0d9488",color:"#fff",border:"none",fontSize:13,fontWeight:700,cursor:"pointer"}}>{t.send}</button>
-                  {ci.fileNo && (
-                    <a href={`https://esmart-report.vercel.app?reg=${ci.fileNo}&mode=family&lang=${lang||"en"}`}
-                      target="_blank" rel="noopener noreferrer"
-                      style={{padding:"8px 14px",borderRadius:8,
-                        background:"linear-gradient(135deg,#0d9488,#10b981)",
-                        color:"#fff",border:"none",fontSize:13,fontWeight:700,
-                        cursor:"pointer",textDecoration:"none",display:"inline-block"}}>
-                      📋 {t.familyReport||"Family Report"} →
-                    </a>
-                  )}
+                  {(ci.cFileNo||ci.fileNo) && (() => {
+                    const aid = generateAutoID(ci.surname||"",ci.dob,ci.mobile1||"",ci.mobile2||"");
+                    const reg = (!aid||aid.includes("XXX"))?(ci.cFileNo||ci.fileNo):aid;
+                    return <>
+                      <a href={`https://esmart-report.vercel.app?reg=${reg}&mode=family&lang=${lang||"en"}`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{padding:"8px 14px",borderRadius:8,background:"linear-gradient(135deg,#0d9488,#10b981)",
+                          color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",textDecoration:"none",display:"inline-block"}}>
+                        👨‍👩‍👧 Family Report
+                      </a>
+                      <a href={`https://esmart-report.vercel.app?reg=${reg}&mode=clinical`}
+                        target="_blank" rel="noopener noreferrer"
+                        style={{padding:"8px 14px",borderRadius:8,background:"#1e3a5f",
+                          color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",textDecoration:"none",display:"inline-block"}}>
+                        📋 Clinical Report
+                      </a>
+                      <a href="https://esmart-v.vercel.app" target="_blank" rel="noopener noreferrer"
+                        style={{padding:"8px 14px",borderRadius:8,background:"#0d5c6e",
+                          color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",textDecoration:"none",display:"inline-block"}}>
+                        🏥 Open V →
+                      </a>
+                    </>;
+                  })()}
                 </div>
                 {shSt&&<p style={{margin:"5px 0 0",fontSize:12,color:shSt.includes("✅")?"#16a34a":"#dc2626"}}>{shSt}</p>}
               </div>
